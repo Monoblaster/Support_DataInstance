@@ -146,6 +146,10 @@ function SimObject::DataInstance_ListLoad(%obj)
 	}
 }
 
+function SimObject::DataIdentifier(%obj,%append)
+{
+	return "";
+}
 
 function Player::DataIdentifier(%obj,%append)
 {
@@ -215,29 +219,25 @@ function DataInstance_GetFromThrower(%item)
     }
 }
 
+package DataInstance_SimObject_OnRemove
+{
+	function SimObject::OnRemove()
+	{
+		return "";
+	}
+};
+
+if(!isFunction("SimObject","OnRemove"))
+{
+	activatePackage("DataInstance_SimObject_OnRemove");
+}
+
 package DataInstance
 {
-	function Armor::OnRemove(%data,%obj)
+	function SimObject::OnRemove(%data,%obj)
 	{
 		DataInstance_ListDelete(%obj.DataInstance_List);
 		parent::OnRemove(%data,%obj);
-	}
-
-	function Item::OnRemove(%data,%obj)
-	{
-	 	DataInstance_ListDelete(%obj.DataInstance_List);
-		parent::OnRemove(%data,%obj);
-	}
-
-	function fxDtsBrick::OnRemove(%data,%obj)
-	{
-	 	DataInstance_ListDelete(%obj.DataInstance_List);
-		parent::OnRemove(%data,%obj);
-	}
-
-	function DataInstance::OnRemove(%obj)
-	{
-	 	DataInstance_ListDelete(%obj.DataInstance_List);
 	}
 
 	function ItemData::onPickup (%this, %obj, %user, %amount)
