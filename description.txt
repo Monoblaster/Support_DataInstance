@@ -3,7 +3,7 @@ Structure
 	be a string list of DataInstance objects. You can use the following functions
 	to manipulate and access this list and DataInstances.
 	DataInstances themselves can have a DataInstance list.
-
+	You set data on a DataInstance as with any object.
 
 SimObject::DataInstance(%slot)
 	%slot	an integer number greater than 0
