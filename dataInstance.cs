@@ -191,7 +191,7 @@ function DataInstance::StringSerialize(%d)
 		{
 			%value = %d.DataInstance_ListSave();
 		}
-		%s = %s @ getSubStr(%value,0,1) @ "[\"" @ getSubStr(%value,1,999999) @ "\"]" @ "=\"" @ @ "\";";
+		%s = %s @ getSubStr(%name,0,1) @ "[\"" @ getSubStr(%name,1,999999) @ "\"]" @ "=\"" @ %value @ "\";";
 		%c++;
 	}
 	%s = %s @ "};";
