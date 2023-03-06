@@ -5,11 +5,14 @@ Structure
 	DataInstances themselves can have a DataInstance list.
 	You set data on a DataInstance as with any object.
 
-SimObject::DataInstance(%slot)
-	%slot	an integer number greater than 0
+SimObject::DataInstance(%slot1[,%slot2,%slot3,...])
+	%slotn	an integer number greater than 0
 	return	a DataInstance
 
 	Fetches the DataInstance at the specified slot and create a new one if necessary.
+	If multiple are specified it will enter the first dataInstance and look for the second in there.
+	Example: dataInstance(0,1,2) will access the 2nd datainstance in the list of the
+	1st dataInstance in the list of the 0th datainstance on your object
 
 SimObject::DataInstance_Set(%slot,%s)
 	%slot	an integer number greater than 0

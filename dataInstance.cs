@@ -35,13 +35,19 @@ function DataInstance_ListStringSerialize(%list)
 	return %s;
 }
 
-function SimObject::DataInstance(%obj,%slot)
+function SimObject::DataInstance(%obj,%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7,%a8,%a9,%a10,%a11,%a12,%a13)
 {
-	%d = getWord(%obj.DataInstance_List,%slot);
-	if(%d $= "")
+	%c = 0;
+	while(%a[%c] !$= "")
 	{
-		%d = new ScriptObject(){class = "DataInstance";DataInstance_Parent = %obj;};
-		%obj.DataInstance_List = setWord(%obj.DataInstance_List,%slot,%d);
+		%d = getWord(%obj.DataInstance_List,%a[%c]);
+		if(%d $= "")
+		{
+			%d = new ScriptObject(){class = "DataInstance";DataInstance_Parent = %obj;};
+			%obj.DataInstance_List = setWord(%obj.DataInstance_List,%a[%c],%d);
+		}
+		%obj = %d;
+		%c++;
 	}
 	return %d;
 }
@@ -198,20 +204,21 @@ function DataInstance::StringSerialize(%d)
 	return %s;
 }
 
+$DataInstance::Item = 0;
 function DataInstance_GetFromThrower(%item)
 {
     %p = findClientByBl_Id(%item.bl_id).player;
     if(isObject(%p))
     {
 		%datablock = %item.getDatablock().getId();
-		%list = %p.dataInstance_List;
+		%list = %p.dataInstance($DataInstance::Item).dataInstance_List;
         %count = getWordCount(%list);
         for(%i = 0; %i < %count; %i++)
         {
             if(%p.tool[%i] == 0 && isObject(%d = getWord(%list,%i)))
             {
                 %item.dataInstance_set(0,%d);
-				%p.DataInstance_Set(%i);
+				%p.dataInstance($DataInstance::Item).DataInstance_Set(%i);
                 return "";
             }
         }
@@ -235,7 +242,7 @@ package DataInstance
 {
 	function SimObject::OnRemove(%data,%obj)
 	{
-		DataInstance_ListDelete(%obj.DataInstance_List);
+		DataInstance_ListDelete(%obj.dataInstance($DataInstance::Item).DataInstance_List);
 		parent::OnRemove(%data,%obj);
 	}
 
@@ -255,7 +262,7 @@ package DataInstance
 		{
 			if(%before[%i] != %user.tool[%i])
 			{
-				%user.DataInstance_set(%i,%data);
+				%user.dataInstance($DataInstance::Item).DataInstance_set(%i,%data);
 				break;
 			}
 		}
