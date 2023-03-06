@@ -66,8 +66,7 @@ function SimObject::DataInstance_Add(%obj,%s,%slot)
 
 function SimObject::DataInstance_ListGet(%obj)
 {
-	%obj.DataInstance_List = %s;
-	return "";
+	return %obj.DataInstance_List;
 }
 
 
