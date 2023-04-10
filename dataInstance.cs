@@ -161,13 +161,24 @@ function Player::DataIdentifier(%obj,%append)
 	%c = %obj.client;
 	if(isObject(%c))
 	{
-		return %c.getBLID() @ %append;
+		return %obj.getClassName() @ %c.getBLID() @ %append;
 	}
 }
 
+function GameConnection::DataIdentifier(%obj,%append)
+{
+	return %obj.getClassName() @ %obj.getBLID() @ %append;
+}
+
+function MinigameSO::DataIdentifier(%obj,%append)
+{
+	return %obj.class @ %obj.getName() @ %append;
+}
+
+
 function fxDtsBrick::DataIdentifier(%obj,%append)
 {
-	return %obj.getTransform() @ %obj.getDatablock() @ %append;
+	return %obj.getClassName() @ %obj.getTransform() @ %obj.getDatablock() @ %append;
 }
 
 function DataInstance::DataIdentifier(%obj,%append)
@@ -179,7 +190,7 @@ function DataInstance::DataIdentifier(%obj,%append)
 	{
 		if(getWord(%list,%i) == %Obj)
 		{
-			return %parent.DataIdentifier("DataInstance" @ %i) @ %append;
+			return %parent.DataIdentifier(%obj.class @ %i) @ %append;
 		}
 	}
 	return "";

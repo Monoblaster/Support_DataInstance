@@ -40,9 +40,9 @@ SimObject::DataInstance_ListSet(%s)
 
 SimObject::DataInstance_ListSave()
 	Saves the DataInstance list on the object into its file.
-	Only works on Player with a client, fxDtsBrick, and DataInstance.
+	Only works on Player with a client, GameConnection, MinigameSO, fxDtsBrick, and DataInstance.
 	Will save nested DataInstance lists but will not successfuly save objects in normal fields.
 
 SimObject::DataInstance_ListLoad()
 	Loads the DataInstance list of the object from its file.
-	Only works on Player with a client, fxDtsBrick, and DataInstance.
+	Only works on Player with a client, GameConnection, MinigameSO, fxDtsBrick, and DataInstance.
