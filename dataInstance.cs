@@ -12,7 +12,6 @@ function DataInstance_ListDelete(%list)
 		%curr = getWord(%list,%i);
 		if(isObject(%curr))
 		{
-			$DataInstance::Group.remove(%curr);
 			%curr.delete();
 		}
 	}
@@ -47,6 +46,7 @@ function DataInstance::OnAdd(%obj)
 
 function DataInstance::OnRemove(%obj)
 {
+	$DataInstance::Group.remove(%obj);
 	if(%obj.DataInstance_List !$= "")
 	{
 		DataInstance_ListDelete(%obj.DataInstance_List);
@@ -98,7 +98,6 @@ function SimObject::DataInstance_MoveTo(%obj,%from,%target,%to)
 	%curr = getWord(%target.DataInstance_List,%to);
 	if(%curr !$= "")
 	{
-		$DataInstance::Group.remove(%curr);
 		%curr.delete();
 	}
 
@@ -112,7 +111,6 @@ function SimObject::DataInstance_Set(%obj,%slot,%s)
 	%curr = getWord(%obj.DataInstance_List,%slot);
 	if(%curr !$= "")
 	{
-		$DataInstance::Group.remove(%curr);
 		%curr.delete();
 	}
 	%s = getWord(%s,0);
@@ -184,7 +182,7 @@ function DataInstance_ListLoad(%path,%parent)
 		while(!%fo.isEOF())
 		{
 			%o = eval(%fo.readLine());
-			%o.DataInstance_parent = %parent;
+			%o.DataInstance_Parent = %parent;
 			%data[%c] = %o;
 			%c++;
 		}
