@@ -1,4 +1,8 @@
 $DataInstance::FilePath = "Config/Server/DataInstance";
+if(!isObject($DataInstance::Group))
+{
+	$DataInstance::Group = new ScriptGroup();
+}
 
 function DataInstance_ListDelete(%list)
 {
@@ -8,6 +12,7 @@ function DataInstance_ListDelete(%list)
 		%curr = getWord(%list,%i);
 		if(isObject(%curr))
 		{
+			$DataInstance::Group.remove(%curr);
 			%curr.delete();
 		}
 	}
@@ -35,6 +40,43 @@ function DataInstance_ListStringSerialize(%list)
 	return %s;
 }
 
+function DataInstance::OnAdd(%obj)
+{
+	$DataInstance::Group.add(%obj);
+}
+
+function DataInstance::OnRemove(%obj)
+{
+	if(%obj.DataInstance_List !$= "")
+	{
+		DataInstance_ListDelete(%obj.DataInstance_List);
+	}
+}
+
+function DataInstance_Create(%obj,%index)
+{
+	%d = new ScriptObject(){class = "DataInstance";DataInstance_Parent = %obj;};
+	%obj.DataInstance_List = setWord(%obj.DataInstance_List,%index,%d);
+	return %d;
+}
+
+// if index is empty returns nothing
+function SimObject::GetDataInstance(%obj,%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7,%a8,%a9,%a10,%a11,%a12,%a13)
+{
+	%c = 0;
+	while(%a[%c] !$= "")
+	{
+		%d = getWord(%obj.DataInstance_List,%a[%c]);
+		if(%d $= "")
+		{
+			return "";
+		}
+		%obj = %d;
+		%c++;
+	}
+	return %d;
+}
+
 function SimObject::DataInstance(%obj,%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7,%a8,%a9,%a10,%a11,%a12,%a13)
 {
 	%c = 0;
@@ -43,8 +85,7 @@ function SimObject::DataInstance(%obj,%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7,%a8,%a9,%a
 		%d = getWord(%obj.DataInstance_List,%a[%c]);
 		if(%d $= "")
 		{
-			%d = new ScriptObject(){class = "DataInstance";DataInstance_Parent = %obj;};
-			%obj.DataInstance_List = setWord(%obj.DataInstance_List,%a[%c],%d);
+			%d = DataInstance_Create(%obj,%a[%c]);
 		}
 		%obj = %d;
 		%c++;
@@ -52,8 +93,28 @@ function SimObject::DataInstance(%obj,%a0,%a1,%a2,%a3,%a4,%a5,%a6,%a7,%a8,%a9,%a
 	return %d;
 }
 
+function SimObject::DataInstance_MoveTo(%obj,%from,%target,%to)
+{
+	%curr = getWord(%target.DataInstance_List,%to);
+	if(%curr !$= "")
+	{
+		$DataInstance::Group.remove(%curr);
+		%curr.delete();
+	}
+
+	%target.DataInstance_List = setWord(%target.DataInstance_List,%to,getWord(%obj.DataInstance_List,%from));
+	%obj.DataInstance_List = setWord(%obj.DataInstance_List,%from,"");
+	return "";
+}
+
 function SimObject::DataInstance_Set(%obj,%slot,%s)
 {
+	%curr = getWord(%obj.DataInstance_List,%slot);
+	if(%curr !$= "")
+	{
+		$DataInstance::Group.remove(%curr);
+		%curr.delete();
+	}
 	%s = getWord(%s,0);
 	%obj.DataInstance_List = setWord(%obj.DataInstance_List,%slot,%s);
 	return "";
@@ -225,29 +286,33 @@ function DataInstance::StringSerialize(%d)
 }
 
 $DataInstance::Item = 0;
-function DataInstance_GetFromThrower(%item)
+function DataInstance_GetFromThrower(%item)  //item support
 {
-    %p = findClientByBl_Id(%item.bl_id).player;
-    if(isObject(%p))
+    %player = findClientByBl_Id(%item.bl_id).player;
+    if(!isObject(%player))
     {
-		%datablock = %item.getDatablock().getId();
-		%list = %p.dataInstance($DataInstance::Item).dataInstance_List;
-        %count = getWordCount(%list);
-        for(%i = 0; %i < %count; %i++)
-        {
-            if(%p.tool[%i] == 0 && isObject(%d = getWord(%list,%i)))
-            {
-                %item.dataInstance_set(0,%d);
-				%p.dataInstance($DataInstance::Item).DataInstance_Set(%i);
-                return "";
-            }
-        }
+		return "";
     }
+
+	%itemData = %player.GetDataInstance($DataInstance::Item);
+	%itemDataList = %itemData.DataInstance_List;
+	if(%itemDataList $= "")
+	{
+		return "";
+	}
+	%count = getWordCount(%itemDataList);
+	for(%i = 0; %i < %count; %i++)
+	{
+		if(!isObject(%player.tool[%i]) && getWord(%itemDataList,%i) !$= "")
+		{
+			%itemData.DataInstance_MoveTo(%i,%item,0);
+		}
+	}
 }
 
-package DataInstance_SimObject_OnRemove
+package SimObject_OnRemove
 {
-	function SimObject::OnRemove()
+	function SimObject::OnRemove(%data,%obj)
 	{
 		return "";
 	}
@@ -255,21 +320,48 @@ package DataInstance_SimObject_OnRemove
 
 if(!isFunction("SimObject","OnRemove"))
 {
-	activatePackage("DataInstance_SimObject_OnRemove");
+	activatePackage("SimObject_OnRemove");
 }
 
 package DataInstance
 {
-	function SimObject::OnRemove(%data,%obj)
+	function Armor::OnRemove(%data,%obj) //cleanup
 	{
-		if(isObject(%obj))
+		if(%obj.DataInstance_List !$= "")
 		{
-			DataInstance_ListDelete(getWord(%obj.DataInstance_List,$DataInstance::Item).DataInstance_List);
+			DataInstance_ListDelete(%obj.DataInstance_List);
 		}
 		parent::OnRemove(%data,%obj);
 	}
 
-	function ItemData::onPickup (%this, %obj, %user, %amount)
+	function fxDtsBrick::OnRemove(%data,%obj) //cleanup
+	{
+		if(%obj.DataInstance_List !$= "")
+		{
+			DataInstance_ListDelete(%obj.DataInstance_List);
+		}
+		parent::OnRemove(%data,%obj);
+	}
+
+	function Vehicle::OnRemove(%data,%obj) //cleanup
+	{
+		if(%obj.DataInstance_List !$= "")
+		{
+			DataInstance_ListDelete(%obj.DataInstance_List);
+		}
+		parent::OnRemove(%data,%obj);
+	}
+
+	function SimObject::OnRemove(%data,%obj) //cleanup
+	{
+		if(%obj.DataInstance_List !$= "")
+		{
+			DataInstance_ListDelete(%obj.DataInstance_List);
+		}
+		parent::OnRemove(%data,%obj);
+	}
+
+	function ItemData::onPickup (%this, %obj, %user, %amount) //item support
     {
         //sigh looks like i have to play "find the difference"
         %maxTools = %user.getDatablock().maxTools;
@@ -277,7 +369,12 @@ package DataInstance
         {
             %before[%i] = %user.tool[%i];
         }
-		%data = %obj.dataInstance(0);
+
+		%itemData = %obj.GetDataInstance(0);
+		if(%itemData $= "")
+		{
+			return parent::onPickup(%this, %obj, %user, %amount);
+		}
 		%obj.DataInstance_ListSet("");
         %r = parent::onPickup(%this, %obj, %user, %amount);
 
@@ -285,15 +382,15 @@ package DataInstance
 		{
 			if(%before[%i] != %user.tool[%i])
 			{
-				%user.dataInstance($DataInstance::Item).DataInstance_set(%i,%data);
-				break;
+				%user.dataInstance($DataInstance::Item).DataInstance_Set(%i,%itemData);
+				return %r;
 			}
 		}
         
         return %r;
     }
 
-    function ItemData::OnAdd(%db, %obj)
+    function ItemData::OnAdd(%db, %obj) //item support
     {
     	schedule(0,%obj,"DataInstance_GetFromThrower",%obj);
         return Parent::OnAdd(%db, %obj);
