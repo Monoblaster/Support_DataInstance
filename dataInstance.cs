@@ -10,7 +10,7 @@ function DataInstance_ListDelete(%list)
 	for(%i = 0; %i < %count; %i++)
 	{
 		%curr = getWord(%list,%i);
-		if(isObject(%curr))
+		if(isObject(%curr) && %curr.class $= "DataInstance")
 		{
 			%curr.delete();
 		}
